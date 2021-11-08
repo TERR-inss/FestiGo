@@ -16,8 +16,11 @@ async function createTAB() {
         start_time VARCHAR(64),
         venue VARCHAR (255),
         city VARCHAR(40),
-        state VARCHAR(64),
-        url VARCHAR (255),
+        event_id VARCHAR(14),
+        image_url VARCHAR(255),
+        tm_url VARCHAR (255),
+        country VARCHAR,
+        datedays INT,
         UNIQUE(id)
     )`
 
@@ -34,8 +37,8 @@ async function createTAB() {
 
 async function insertDB(twentyEvents) {
 
-    const insertEvent = `INSERT INTO events (name, start_date, start_time, venue, city, state, event_id, image_url, tm_url, max_price, min_price, currency, country, datedays) 
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) ON CONFLICT DO NOTHING`;
+    const insertEvent = `INSERT INTO events (name, start_date, start_time, venue, city, event_id, image_url, tm_url, country, datedays) 
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT DO NOTHING`;
     // const insertEvent = `INSERT INTO events (name, start_date, start_time, venue, city, state, url, event_id) 
     //                     SELECT $1, $2, $3, $4, $5, $6, $7, $8
     //                     WHERE
@@ -50,23 +53,21 @@ async function insertDB(twentyEvents) {
             const dateArr = event.dates.start.localDate.split("-");
             const eventDate = tool.getDays(dateArr[0], dateArr[1], dateArr[2]);
 
+
             const queryIDs = [
                 event.name,
                 event.dates.start.localDate,
                 event.dates.start.localTime,
                 event._embedded.venues[0].name,
                 event._embedded.venues[0].city.name,
-                event._embedded.venues[0].state.name,
                 event.id,
                 eventImageLink,
                 event.url,
-                event.priceRanges[0].min,
-                event.priceRanges[0].max,
-                event.priceRanges[0].currency,
                 event._embedded.venues[0].country.name,
                 eventDate,
             ];
-            console.log(queryIDs)
+
+            console.log(queryIDs);
             console.log("00000    " + i + "    00000");
             await db.query(insertEvent, queryIDs);
         }
@@ -102,12 +103,14 @@ async function findBestPic(imageArr) {
 
 
 async function dataRequest() {
-    let apiUrlFirstPart = 'https://app.ticketmaster.com/discovery/v2/events?apikey=zQLojc5AWQltobDlNL7L7uL5r3QmhjUG&source=ticketmaster&locale=*&startDateTime=2021-11-08T19:46:00Z&page=';
-    let apiUrlEnd = '&countryCode=US&segmentName=Music';
+    let apiUrlFirstPart = 'https://app.ticketmaster.com/discovery/v2/events?apikey=zQLojc5AWQltobDlNL7L7uL5r3QmhjUG&source=ticketmaster&locale=*&startDateTime=';
+    let queryStartDate = '2022-10-10';
+    let apiUrlSecondPart = 'T10:24:00Z&page=';
+    let apiUrlEnd = '&sort=date,asc&segmentName=Music';
     let tmpData = "";
 
-    for (let page = 1; page < 701; page++) {
-        let wholeUrl = apiUrlFirstPart + page.toString() + apiUrlEnd;
+    for (let page = 1; page < 50; page++) {
+        let wholeUrl = apiUrlFirstPart + queryStartDate + apiUrlSecondPart + page.toString() + apiUrlEnd;
 
         try {
             tmpData = await axios(wholeUrl);
@@ -176,8 +179,8 @@ async function wipeTable(tableName) {
 // createTAB();
 // getData(url);
 // deleteColumn('min_price')
-//wipeTable('events')
+// wipeTable('events')
 // addColumn("dateDays", "INT")
 // addColumn("min_price", "DECIMAL(10, 2)")
 // addColumn("country", "VARCHAR(40)")
-// dataRequest();
+//  dataRequest();
